@@ -57,6 +57,7 @@ class NewPermissions extends Seeder
             'confirm-shipment-payment',
             'print-shipment-invoice',
             'print-shipment-receipt',
+            'refund-shipment-payment',
         ];
         $permissions3 = [
             'view-exchange-rates',

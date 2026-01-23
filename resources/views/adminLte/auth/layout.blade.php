@@ -24,8 +24,8 @@
         @endphp
         <link rel="shortcut icon" href="{{ $model->getFirstMediaUrl('system_logo') ? $model->getFirstMediaUrl('system_logo') : asset('assets/lte/media/logos/favicon.png') }}" />
 
-        <!-- Google Font: Source Sans Pro -->
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback"> 
+        <!-- Google Font: Poppins -->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"> 
 		<!-- fontawesome-free -->
         <link rel="stylesheet" href="{{ asset('assets/lte') }}/plugins/fontawesome/css/all.min.css">
         <!-- icheck-bootstrap -->
@@ -38,7 +38,12 @@
             <link rel="stylesheet" href="{{ asset('assets/lte') }}/css/ltr.css">
         @endif
 
-        
+        <style>
+            body {
+                font-family: 'Poppins', sans-serif;
+            }
+        </style>
+
         @yield('styles')
     </head>
     <body class="hold-transition login-page">

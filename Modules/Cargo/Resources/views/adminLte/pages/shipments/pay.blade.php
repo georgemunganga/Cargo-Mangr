@@ -28,8 +28,8 @@ $d = new DNS1D();
         @endphp
         <link rel="shortcut icon" href="{{ $model->getFirstMediaUrl('system_logo') ? $model->getFirstMediaUrl('system_logo') : asset('assets/lte/media/logos/favicon.png') }}" />
 
-        <!-- Google Font: Source Sans Pro -->
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+        <!-- Google Font: Poppins -->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
 
         <!--begin::Global Stylesheets Bundle(used by all pages)-->
 		<link href="{{ asset('assets/lte/plugins/global/plugins.bundle.css') }}" rel="stylesheet" type="text/css" />

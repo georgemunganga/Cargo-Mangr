@@ -173,7 +173,7 @@
     <style>
         /* Enhanced DataTable styling */
         .dataTables_wrapper {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
         
         .dataTables_filter input {

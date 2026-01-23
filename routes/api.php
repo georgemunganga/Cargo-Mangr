@@ -60,4 +60,6 @@ Route::post('/parcels/unsynced', [App\Http\Controllers\Api\ShipmentController::c
 
 // Payment APIs
 Route::post('/mark-as-paid', [\Modules\Cargo\Http\Controllers\ShipmentController::class, 'markAsPaid'])->name('api.mark-as-paid');
-Route::post('/refund-payment', [\Modules\Cargo\Http\Controllers\ShipmentController::class, 'refundPayment'])->name('api.refund-payment');
+Route::post('/refund-payment', [\Modules\Cargo\Http\Controllers\ShipmentController::class, 'refundPayment'])
+    ->middleware(['web', 'auth'])
+    ->name('api.refund-payment');

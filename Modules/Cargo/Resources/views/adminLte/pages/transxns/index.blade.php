@@ -126,6 +126,10 @@ $client = 4;
                     <td class="px-4 py-2">
                         @if($txn->isRefunded())
                             <span class="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700">Refunded</span>
+                        @elseif($txn->isRefundRequested())
+                            <span class="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700">Refund Requested</span>
+                        @elseif($txn->isPartiallyRefunded())
+                            <span class="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700">Partially Refunded</span>
                         @elseif($txn->isCompleted())
                             <span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">Completed</span>
                         @else

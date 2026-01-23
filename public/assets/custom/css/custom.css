@@ -5,6 +5,14 @@
   color: #333;
 }
 
+body,
+button,
+input,
+select,
+textarea {
+  font-family: 'Poppins', sans-serif;
+}
+
 .lang_container.text .select2 {
   width: 100% !important;
 }
@@ -31,7 +39,7 @@
   text-align: start;
   height: 28px;
   line-height: 2rem;
-  font-family: tahoma;
+  font-family: 'Poppins', sans-serif;
   font-size: 13px;
 }
 .lang_container .select2 .select2-selection:focus {
@@ -53,7 +61,7 @@
 
 .select2-container--default .select2-results__option {
   line-height: 1.5rem !important;
-  font-family: tahoma !important;
+  font-family: 'Poppins', sans-serif !important;
   font-size: 13px !important;
 }
 
@@ -94,7 +102,7 @@
   text-align: start;
   height: 28px;
   line-height: 2rem;
-  font-family: tahoma;
+  font-family: 'Poppins', sans-serif;
   font-size: 13px;
 }
 .url_input_container .select2 .select2-selection:focus {
@@ -116,7 +124,7 @@
 
 .select2-container--default .select2-results__option {
   line-height: 1.5rem !important;
-  font-family: tahoma !important;
+  font-family: 'Poppins', sans-serif !important;
   font-size: 13px !important;
 }
 

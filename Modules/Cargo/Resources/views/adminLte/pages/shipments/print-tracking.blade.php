@@ -268,7 +268,7 @@
                     }
 
                     #items {
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+                        font-family: 'Poppins', sans-serif;
                         border-collapse: collapse;
                         width: 100%;
                     }

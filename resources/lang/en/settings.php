@@ -11,6 +11,8 @@ return [
     'login_page_logo' => 'Login page logo',
     'social_image' => 'Social media image',
     'maintenance_mode' => 'Maintenance Mode',
+    'enable_refund_payments' => 'Enable refund payments',
+    'allow_client_refunds' => 'Allow client refunds',
     'timezone' => 'Timezone',
     'sms_notifications' => 'SMS Notifications',
     'whatsapp_notifications' => 'whatsapp Notifications',

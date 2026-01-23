@@ -200,8 +200,16 @@ return [
 
         // our packages provider
         Yajra\DataTables\DataTablesServiceProvider::class,
+        Yajra\DataTables\HtmlServiceProvider::class,
+        Livewire\LivewireServiceProvider::class,
         Spatie\Permission\PermissionServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
+        Qirolab\Theme\ThemeServiceProvider::class,
+        Nwidart\Modules\LaravelModulesServiceProvider::class,
+        Mcamara\LaravelLocalization\LaravelLocalizationServiceProvider::class,
+        Spatie\MediaLibrary\MediaLibraryServiceProvider::class,
+        Spatie\MediaLibraryPro\MediaLibraryProServiceProvider::class,
+        Spatie\LaravelSettings\LaravelSettingsServiceProvider::class,
 
         Barryvdh\Debugbar\ServiceProvider::class, // for debug
         Unicodeveloper\Paystack\PaystackServiceProvider::class,
@@ -272,6 +280,7 @@ return [
 
         'Debugbar' => Barryvdh\Debugbar\Facade::class, // for debug
         'Paystack' => Unicodeveloper\Paystack\Facades\Paystack::class,
+        'LaravelLocalization' => Mcamara\LaravelLocalization\Facades\LaravelLocalization::class,
     ],
 
 ];

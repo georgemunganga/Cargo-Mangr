@@ -239,6 +239,49 @@ $user_role == $driver)
 @endif --}}
 
 
+@if (
+    auth()->user()->can('access-finance-transactions')
+    || auth()->user()->can('approve-refund-requests')
+)
+<li
+    class="nav-item {{ areActiveRoutes(['transxn.index', 'refund-requests.index', 'refund-requests.show'], 'menu-is-opening menu-open active') }}">
+    <a href="#"
+        class="nav-link {{ areActiveRoutes(['transxn.index', 'refund-requests.index', 'refund-requests.show'], 'menu-is-opening menu-open active') }}">
+        <i style="color: #fff" class="fas fa-money-check-alt"></i>
+        &nbsp;
+        <p style="color: #fff">
+            {{ __('cargo::view.transactions') }}
+            <i class="right fas fa-angle-left"></i>
+        </p>
+    </a>
+
+    <ul class="nav nav-treeview">
+        @can('access-finance-transactions')
+        <li class="nav-item">
+            <a href="{{ route('transxn.index') }}"
+                class="nav-link {{ areActiveRoutes(['transxn.index']) }}">
+                <i style="color: #fff" class="fas fa-list fa-fw"></i>
+                &nbsp;
+                <p style="color: #fff">Transactions</p>
+            </a>
+        </li>
+        @endcan
+
+        @if (auth()->user()->can('approve-refund-requests'))
+        <li class="nav-item">
+            <a href="{{ fr_route('refund-requests.index') }}"
+                class="nav-link {{ areActiveRoutes(['refund-requests.index', 'refund-requests.show']) }}">
+                <i style="color: #fff" class="fas fa-undo fa-fw"></i>
+                &nbsp;
+                <p style="color: #fff">Refunds</p>
+            </a>
+        </li>
+        @endif
+    </ul>
+</li>
+@endif
+
+
 {{-- @if (auth()->user()->can('manage-transactions') || in_array($user_role, [$admin, $branch, $driver, $client]))
 <li
     class="nav-item {{ active_uri('transactions', ['class_name' => 'show']) }}  {{ areActiveRoutes(['transactions', 'transactions.create', 'transactions.index'],'menu-is-opening menu-open active') }}">

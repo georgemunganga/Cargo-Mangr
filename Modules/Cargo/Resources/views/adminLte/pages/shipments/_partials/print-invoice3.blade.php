@@ -1,9 +1,10 @@
 
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
     body {
         background-color: #f3f4f6;
         color: #1f2937;
+        font-family: 'Poppins', sans-serif;
     }
 
     #printable-invoice {

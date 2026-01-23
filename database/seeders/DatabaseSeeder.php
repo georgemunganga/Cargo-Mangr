@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             // SettingTableSeeder::class
             NwcReportPermissionSeeder::class,
+            RefundPermissionSeeder::class,
         ]);
     }
 }

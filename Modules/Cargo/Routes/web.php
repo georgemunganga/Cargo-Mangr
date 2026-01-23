@@ -184,6 +184,7 @@ if (\Illuminate\Support\Facades\Schema::hasTable('translations') && check_module
             Route::prefix('shipments')->group(function() {
 
                 Route::get('shipments/print/{shipment}/{type}','ShipmentController@print')->name('shipments.print');
+                Route::post('shipments/print-log/{shipment}', 'ShipmentController@logPrint')->name('shipments.print-log');
 
                 // Add Shipment By Api & Import Shipmetn Routes
                 Route::get('import', 'ShipmentController@import')->name('shipments.import');
@@ -224,6 +225,16 @@ if (\Illuminate\Support\Facades\Schema::hasTable('translations') && check_module
                 Route::delete('/shipments-multi-destroy', 'ShipmentController@multiDestroy')->name('shipments.multi-destroy');
                 Route::resource('shipments','ShipmentController');
 
+            });
+
+            Route::post('shipments/refund-payment', 'ShipmentController@refundPayment')->name('shipments.refund-payment');
+
+            Route::prefix('refund-requests')->group(function() {
+                Route::get('/', 'RefundRequestController@index')->name('refund-requests.index');
+                Route::get('{id}', 'RefundRequestController@show')->name('refund-requests.show');
+                Route::post('/', 'RefundRequestController@store')->name('refund-requests.store');
+                Route::post('{id}/approve', 'RefundRequestController@approve')->name('refund-requests.approve');
+                Route::post('{id}/decline', 'RefundRequestController@decline')->name('refund-requests.decline');
             });
 
             // Manifests Routes
@@ -481,6 +492,7 @@ if (\Illuminate\Support\Facades\Schema::hasTable('translations') && check_module
         Route::prefix('shipments')->group(function() {
 
             Route::get('shipments/print/{shipment}/{type}','ShipmentController@print')->name('shipments.print');
+            Route::post('shipments/print-log/{shipment}', 'ShipmentController@logPrint')->name('shipments.print-log');
 
             // Add Shipment By Api & Import Shipmetn Routes
             Route::get('import', 'ShipmentController@import')->name('shipments.import');
@@ -521,6 +533,16 @@ if (\Illuminate\Support\Facades\Schema::hasTable('translations') && check_module
             Route::resource('shipments','ShipmentController');
 
             Route::get('shipments/overview', 'ShipmentController@overview')->name('shipments.overview');
+        });
+
+        Route::post('shipments/refund-payment', 'ShipmentController@refundPayment')->name('shipments.refund-payment');
+
+        Route::prefix('refund-requests')->group(function() {
+            Route::get('/', 'RefundRequestController@index')->name('refund-requests.index');
+            Route::get('{id}', 'RefundRequestController@show')->name('refund-requests.show');
+            Route::post('/', 'RefundRequestController@store')->name('refund-requests.store');
+            Route::post('{id}/approve', 'RefundRequestController@approve')->name('refund-requests.approve');
+            Route::post('{id}/decline', 'RefundRequestController@decline')->name('refund-requests.decline');
         });
 
         // Manifests Routes

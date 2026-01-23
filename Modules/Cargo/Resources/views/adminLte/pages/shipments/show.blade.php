@@ -2,10 +2,21 @@
     use \Milon\Barcode\DNS1D;
     use Carbon\Carbon;
     use Illuminate\Support\Str;
+    use App\Models\GeneralSettings;
     $d = new DNS1D();
     $user_role = auth()->user()->role;
     $admin = 1;
     $auditLogs = $auditLogs ?? collect();
+    $settings = app(GeneralSettings::class);
+    $refundEnabled = (bool) ($settings->enable_refund_payments ?? false);
+    $allowClientRefunds = (bool) ($settings->allow_client_refunds ?? false);
+    $canApproveRefundRequests = auth()->user()->can('approve-refund-requests');
+    $canDirectRefund = $refundEnabled && $canApproveRefundRequests;
+    $canRequestRefund = $refundEnabled && (
+        ($user_role == 4 && $allowClientRefunds)
+        || ($user_role != 4 && (auth()->user()->can('confirm-shipment-payment') || auth()->user()->hasRole(['cashier', 'cashiers'])))
+    );
+    $pendingRefundRequest = $pendingRefundRequest ?? null;
 @endphp
 
 @extends('cargo::adminLte.layouts.master')
@@ -121,6 +132,13 @@
                                 &nbsp;
                                 <span>Audit Trails</span>
                             </button>
+                            @if ($canApproveRefundRequests)
+                                <a href="{{ fr_route('refund-requests.index') }}"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    <i class="fas fa-list mr-1"></i>
+                                    <span>Refund Requests</span>
+                                </a>
+                            @endif
                             @can('print-shipment-invoice')
                                 <button id="printBtn2" onclick="printInvoice()"
                                     class="btnclicky inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-dark bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
@@ -137,13 +155,38 @@
                                 @can('print-shipment-receipt')
                                     @include('cargo::adminLte.pages.shipments._partials.print-receipt')
                                 @endcan
-                                {{-- @can('refund-shipment-payment') --}}
-                                <button
-                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                    onclick="openRefundModal({{ $shipment->id }})">
-                                    <i class="fas fa-undo mr-1"></i> Refund Payment
-                                </button>
-                                {{-- @endcan --}}
+                                @if ($pendingRefundRequest)
+                                    @if ($canDirectRefund)
+                                        <a href="{{ fr_route('refund-requests.show', $pendingRefundRequest->id) }}"
+                                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                            <i class="fas fa-clipboard-check mr-1"></i> Review Refund Request
+                                        </a>
+                                    @else
+                                        <span class="text-sm text-yellow-700 bg-yellow-100 px-3 py-2 rounded-md">
+                                            Refund request pending
+                                        </span>
+                                    @endif
+                                @else
+                                    @if ($canDirectRefund)
+                                        <button
+                                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 refund-action-btn"
+                                            data-refund-action="direct"
+                                            data-refund-url="{{ fr_route('shipments.refund-payment', [], false) }}"
+                                            data-refund-label="Refund Payment"
+                                            onclick="openRefundModal({{ $shipment->id }}, this)">
+                                            <i class="fas fa-undo mr-1"></i> Refund Payment
+                                        </button>
+                                    @elseif ($canRequestRefund)
+                                        <button
+                                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 refund-action-btn"
+                                            data-refund-action="request"
+                                            data-refund-url="{{ fr_route('refund-requests.store', [], false) }}"
+                                            data-refund-label="Request Refund"
+                                            onclick="openRefundModal({{ $shipment->id }}, this)">
+                                            <i class="fas fa-paper-plane mr-1"></i> Request Refund
+                                        </button>
+                                    @endif
+                                @endif
                             @else
                                 @php
                                     $user = auth()->user();
@@ -493,6 +536,32 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="refundType" class="form-label fw-medium mb-2"
+                                                    style="color: #475569; font-size: 0.9rem;">
+                                                    Refund Type
+                                                </label>
+                                                <select class="form-select form-control-lg border-0"
+                                                    id="refundType"
+                                                    style="background-color: #f8fafc; border-radius: 8px; height: 48px; font-size: 0.95rem;">
+                                                    <option value="full">Full Refund</option>
+                                                    <option value="partial">Partial Refund</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="refundAmount" class="form-label fw-medium mb-2"
+                                                    style="color: #475569; font-size: 0.9rem;">
+                                                    Refund Amount
+                                                </label>
+                                                <input type="number" class="form-control form-control-lg border-0"
+                                                    id="refundAmount" min="0" step="0.01"
+                                                    value="{{ $remainingRefundAmount ?? $totalAmount }}"
+                                                    style="background-color: #f8fafc; border-radius: 8px; height: 48px; font-size: 0.95rem;">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -505,8 +574,8 @@
                                     <hr style="opacity: 0.1;">
                                     <div class="d-flex justify-content-between mt-2">
                                         <span class="fw-bold" style="color: #dc2626;">Refund Amount:</span>
-                                        <span class="fw-bold fs-5"
-                                            style="color: #dc2626;">{{ number_format($totalAmount, 2) }}</span>
+                                        <span class="fw-bold fs-5" id="refundSummaryAmount"
+                                            style="color: #dc2626;">{{ number_format($remainingRefundAmount ?? $totalAmount, 2) }}</span>
                                     </div>
                                 </div>
                             </form>

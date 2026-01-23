@@ -54,7 +54,7 @@
         #grad1 {
         max-width: 1120px;
         margin: 60px auto;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         #msform {

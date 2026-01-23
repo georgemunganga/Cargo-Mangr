@@ -38,10 +38,13 @@ use App\Models\Consignment;
 use App\Models\CurrencyExchangeRate;
 use App\Models\NwcReceipt;
 use App\Models\ShipmentPaymentReceipt;
+use App\Models\RefundRequest;
 use App\Models\User;
 use App\Models\Transxn;
+use App\Models\GeneralSettings;
 use App\Traits\Tracker;
 use App\Traits\HandlesCurrencyExchange;
+use App\Services\RefundService;
 use Modules\Cargo\Events\AddShipment;
 use Modules\Cargo\Events\CreateMission;
 use Modules\Cargo\Events\ShipmentAction;
@@ -423,7 +426,7 @@ class ShipmentController extends Controller
 
     public function show($id)
     {
-        $shipment = Shipment::with(['nwcReceipt.user'])->find($id);
+        $shipment = Shipment::with(['nwcReceipt.user', 'receipt'])->find($id);
         if (!$shipment) {
             abort(404, 'Shipment not found');
         }
@@ -442,8 +445,17 @@ class ShipmentController extends Controller
         ]);
         $auditLogService = app(AuditLogService::class);
         $auditLogs = $auditLogService->getLogsFor($shipment);
+        $pendingRefundRequest = RefundRequest::where('shipment_id', $shipment->id)
+            ->where('status', RefundRequest::STATUS_PENDING)
+            ->latest()
+            ->first();
+        $remainingRefundAmount = null;
+        if ($shipment->receipt) {
+            $refundedAmount = (float) ($shipment->receipt->refunded_amount ?? 0);
+            $remainingRefundAmount = max(((float) $shipment->receipt->total) - $refundedAmount, 0.0);
+        }
         $adminTheme = env('ADMIN_THEME', 'adminLte');
-        return view('cargo::' . $adminTheme . '.pages.shipments.show', compact('shipment', 'auditLogs'));
+        return view('cargo::' . $adminTheme . '.pages.shipments.show', compact('shipment', 'auditLogs', 'pendingRefundRequest', 'remainingRefundAmount'));
     }
 
     public function edit($id)
@@ -1380,6 +1392,48 @@ class ShipmentController extends Controller
         }
     }
 
+    public function logPrint(Request $request, AuditLogService $auditLogService, $shipment)
+    {
+        $request->validate([
+            'type' => 'required|in:invoice,receipt',
+        ]);
+
+        $shipment = Shipment::with(['receipt', 'nwcReceipt'])->findOrFail($shipment);
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
+        }
+
+        if ($request->type === 'invoice' && !$user->can('print-shipment-invoice')) {
+            return response()->json(['success' => false, 'message' => 'You are not allowed to print invoices.'], 403);
+        }
+
+        if ($request->type === 'receipt' && !$user->can('print-shipment-receipt')) {
+            return response()->json(['success' => false, 'message' => 'You are not allowed to print receipts.'], 403);
+        }
+
+        $receiptNumber = $shipment->receipt?->receipt_number ?? $shipment->nwcReceipt?->receipt_number;
+        $event = $request->type === 'receipt' ? 'receipt_printed' : 'invoice_printed';
+        $printLabel = $request->type === 'receipt' ? 'Receipt' : 'Invoice';
+
+        $auditLogService->createLog(
+            $event,
+            $shipment,
+            null,
+            [],
+            [
+                'print_type' => $request->type,
+                'receipt_number' => $receiptNumber,
+                'shipment_code' => $shipment->code,
+                'printed_at' => now()->toDateTimeString(),
+            ],
+            $printLabel . ' print initiated by ' . ($user->name ?? 'System')
+        );
+
+        return response()->json(['success' => true]);
+    }
+
     public function printTracking($shipment)
     {
 
@@ -1758,58 +1812,97 @@ class ShipmentController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function refundPayment(Request $request)
+    public function refundPayment(Request $request, RefundService $refundService, AuditLogService $auditLogService)
     {
+        $request->validate([
+            'shipment_id' => 'required|exists:shipments,id',
+            'refund_type' => 'required|in:full,partial',
+            'amount' => 'nullable|numeric|min:0.01',
+            'reason' => 'required|string|max:5000',
+        ]);
+
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Authentication required.'
+            ], 401);
+        }
+
+        $settings = app(GeneralSettings::class);
+        if (!(bool) ($settings->enable_refund_payments ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Refunds are disabled.'
+            ], 403);
+        }
+
+        $canDirectRefund = $user->can('approve-refund-requests');
+        if (!$canDirectRefund) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not allowed to approve refunds.'
+            ], 403);
+        }
+
+        if ($user->role == 4) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Clients must request refunds.'
+            ], 403);
+        }
+
+        $shipment = Shipment::with(['paymentReceipts', 'receipt'])->findOrFail($request->shipment_id);
+
+        if (!$shipment->paid) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This shipment is not marked as paid.'
+            ], 400);
+        }
+
+        $pendingRequest = RefundRequest::where('shipment_id', $shipment->id)
+            ->where('status', RefundRequest::STATUS_PENDING)
+            ->first();
+        if ($pendingRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A refund request is already pending for this shipment.'
+            ], 409);
+        }
+
+        $refundType = $request->refund_type;
+        $amount = $refundType === RefundRequest::TYPE_PARTIAL ? (float) $request->amount : 0.0;
+
+        if ($refundType === RefundRequest::TYPE_PARTIAL && $amount <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Refund amount must be greater than zero.'
+            ], 422);
+        }
+
         try {
             DB::beginTransaction();
 
-            $shipment = Shipment::with(['nwcReceipt', 'paymentReceipts', 'receipt'])->findOrFail($request->shipment_id);
-            
-            // Check if shipment is actually paid
-            if (!$shipment->paid) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This shipment is not marked as paid.'
-                ], 400);
-            }
+            $result = $refundService->applyRefund(
+                $shipment,
+                $amount,
+                $refundType,
+                $request->reason
+            );
 
-            // Check if there are multiple payment receipts to refund
-            $paymentReceipts = $shipment->paymentReceipts;
-            
-            if ($paymentReceipts->count() > 0) {
-                // Check if the refunded columns exist in the table
-                $tableHasRefundedColumns = \Illuminate\Support\Facades\Schema::hasColumn('shipment_payment_receipts', 'refunded');
-                
-                if ($tableHasRefundedColumns) {
-                    // Mark multiple payment receipts as refunded instead of deleting
-                    foreach ($paymentReceipts as $paymentReceipt) {
-                        $paymentReceipt->update([
-                            'refunded' => true,
-                            'refunded_at' => now(),
-                            'refund_reason' => $request->reason ?? 'Manual refund'
-                        ]);
-                    }
-                } else {
-                    // If columns don't exist, delete the records (legacy behavior)
-                    foreach ($paymentReceipts as $paymentReceipt) {
-                        $paymentReceipt->delete();
-                    }
-                }
-            }
-
-            // Update the main transaction record to mark as refunded
-            $transaction = $shipment->receipt; // This will get the Transxn record via the 'receipt' relationship
-            if ($transaction) {
-                $transaction->update([
-                    'status' => 'refunded',
-                    'refunded_at' => now(),
-                    'refund_reason' => $request->reason ?? 'Manual refund'
-                ]);
-            }
-
-            // Update shipment status
-            $shipment->paid = 0;
-            $shipment->save();
+            $auditLogService->createLog(
+                'refund_processed',
+                $shipment,
+                null,
+                [],
+                [
+                    'refund_type' => $refundType,
+                    'refund_amount' => $result['refund_amount'],
+                    'refunded_total' => $result['refunded_total'],
+                ],
+                'Refund processed by ' . ($user->name ?? 'System')
+            );
 
             DB::commit();
 
@@ -1817,11 +1910,16 @@ class ShipmentController extends Controller
                 'success' => true,
                 'message' => 'Payment refunded successfully'
             ]);
-
+        } catch (\RuntimeException $e) {
+            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
         } catch (\Exception $e) {
             DB::rollback();
             \Log::error('Refund Error: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to process refund: ' . $e->getMessage()

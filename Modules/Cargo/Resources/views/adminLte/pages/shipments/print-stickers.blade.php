@@ -12,10 +12,10 @@ $cash_payment = 'cash_payment';
 
 <div class="page" style="padding-top:0px;">
     <div class="subpage">
-        <table border="0" cellpadding="0" cellspacing="0" style="font-size:10px;font-family:Arial, Helvetica, sans-serif; ">
+        <table border="0" cellpadding="0" cellspacing="0" style="font-size:10px;font-family:'Poppins', sans-serif; ">
             <tr>
                 <td>
-                    <table width="450px" border="0" cellpadding="0" cellspacing="0" style="font-size:16px;font-family:Arial, Helvetica, sans-serif;">
+                    <table width="450px" border="0" cellpadding="0" cellspacing="0" style="font-size:16px;font-family:'Poppins', sans-serif;">
                         <tr>
                             <td height="21px" colspan="3" style="padding-left:5px; padding-bottom:5px;">
                                 <table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
@@ -173,7 +173,7 @@ $cash_payment = 'cash_payment';
                 </td>
 
                 <td style="padding-right:20px;">
-                    <table width="450px" border="0" cellpadding="0" cellspacing="0" style="font-size:16px;font-family:Arial, Helvetica, sans-serif;">
+                    <table width="450px" border="0" cellpadding="0" cellspacing="0" style="font-size:16px;font-family:'Poppins', sans-serif;">
                         <tr>
                             <td height="21px" colspan="3" style="padding-left:5px; padding-bottom:5px;">
                                 <table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
@@ -525,7 +525,7 @@ $cash_payment = 'cash_payment';
 @if(count($shipments) > $n)
     <div class="page" style="padding-top:0px;position:relative">
         <div class="subpage" style="position: absolute;top: -50px;">
-            <table border="0" cellpadding="0" cellspacing="0" style="font-size:10px;font-family:Arial, Helvetica, sans-serif; ">
+            <table border="0" cellpadding="0" cellspacing="0" style="font-size:10px;font-family:'Poppins', sans-serif; ">
                 <tr>
                     <td valign="top" style="padding:0px;">
                         <img src="{{ asset('assets/img/cut-hr-line.gif') }}" alt="" />

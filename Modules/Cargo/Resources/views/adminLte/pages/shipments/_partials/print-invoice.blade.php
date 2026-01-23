@@ -2,7 +2,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
@@ -13,7 +13,7 @@
                     }
                 },
                 fontFamily: {
-                    'sans': ['Roboto', 'sans-serif'],
+                    'sans': ['Poppins', 'sans-serif'],
                 }
             }
         }
@@ -296,7 +296,44 @@
     </div>
 
 <script>
-    function printInvoice() {
+    if (!window.nwcPrintLogUrl) {
+        window.nwcPrintLogUrl = "{{ fr_route('shipments.print-log', ['shipment' => $shipment->id], false) }}";
+    }
+
+    if (!window.logShipmentPrint) {
+        window.logShipmentPrint = async function (type) {
+            try {
+                const response = await fetch(window.nwcPrintLogUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ type }),
+                });
+
+                const contentType = response.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    throw new Error('Unexpected response');
+                }
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to log print');
+                }
+            } catch (error) {
+                console.error('Print audit log failed:', error);
+            }
+        };
+    }
+
+    async function printInvoice() {
+        if (window.logShipmentPrint) {
+            await window.logShipmentPrint('invoice');
+        }
         let printContent = document.getElementById('printable-invoice').innerHTML;
         let originalContent = document.body.innerHTML;
 

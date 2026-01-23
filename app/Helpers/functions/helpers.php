@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Modules\Localization\Entities\Language;
 use Modules\Menu\Entities\Menus;
 use App\Models\CustomSetting;
+use App\Models\Settings;
 use App\Models\ThemeSettingContainer;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Modules\Cargo\Entities\BusinessSetting;
@@ -155,6 +156,23 @@ if (!function_exists('get_general_setting')) {
     {
 
         if (env('INSTALLATION') == 'true' && \Illuminate\Support\Facades\Schema::hasTable('settings')) {
+            static $refundSettingsEnsured = false;
+
+            if (! $refundSettingsEnsured) {
+                $refundSettingsEnsured = true;
+                $refundDefaults = [
+                    'enable_refund_payments' => true,
+                    'allow_client_refunds' => false,
+                ];
+
+                foreach ($refundDefaults as $name => $value) {
+                    Settings::firstOrCreate(
+                        ['group' => 'general', 'name' => $name],
+                        ['payload' => json_encode($value), 'locked' => 0]
+                    );
+                }
+            }
+
             $settings = app(\App\Models\GeneralSettings::class);
 
             $value = null;

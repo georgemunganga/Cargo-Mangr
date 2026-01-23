@@ -19,10 +19,12 @@ class Transxn extends Model
         'status',
         'refunded_at',
         'refund_reason',
+        'refunded_amount',
     ];
 
     protected $casts = [
         'refunded_at' => 'datetime',
+        'refunded_amount' => 'decimal:2',
     ];
 
     public function shipment()
@@ -40,8 +42,18 @@ class Transxn extends Model
         return $this->status === 'refunded';
     }
 
+    public function isRefundRequested()
+    {
+        return $this->status === 'refund_requested';
+    }
+
+    public function isPartiallyRefunded()
+    {
+        return $this->status === 'partially_refunded';
+    }
+
     public function isCompleted()
     {
-        return $this->status === 'completed';
+        return in_array($this->status, ['completed', 'refund_requested', 'partially_refunded'], true);
     }
 }

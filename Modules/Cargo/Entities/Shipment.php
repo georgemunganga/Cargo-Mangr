@@ -6,6 +6,7 @@ use App\Models\Consignment;
 use App\Models\NwcReceipt;
 use App\Models\Transxn;
 use App\Models\ShipmentPaymentReceipt;
+use App\Models\RefundRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Cargo\Entities\Client;
@@ -507,7 +508,7 @@ class Shipment extends Model implements HasMedia
 
     public function receipt()
     {
-        return $this->hasOne(Transxn::class);
+        return $this->hasOne(Transxn::class)->latestOfMany();
     }
 
     public function nwcReceipt()
@@ -518,5 +519,10 @@ class Shipment extends Model implements HasMedia
     public function paymentReceipts()
     {
         return $this->hasMany(ShipmentPaymentReceipt::class);
+    }
+
+    public function refundRequests()
+    {
+        return $this->hasMany(RefundRequest::class);
     }
 }

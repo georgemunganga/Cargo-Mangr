@@ -3,7 +3,7 @@
 <head>
     <title>Welcome to NewWorld Cargo</title>
 </head>
-<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f7f9fc;">
+<body style="font-family: 'Poppins', Arial, sans-serif; margin: 0; padding: 0; background-color: #f7f9fc;">
     <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
         <!-- Header with Logo -->
         <div style="background: linear-gradient(135deg, #0055a4 0%, #00337f 100%); padding: 30px 20px; text-align: center;">

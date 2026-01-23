@@ -1,5 +1,5 @@
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 
     :root {
         --primary: #020720;
@@ -19,7 +19,7 @@
     }
 
     body {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Poppins', sans-serif;
     }
 
     #cookie-banner {
@@ -120,7 +120,7 @@
     }
 
     .btn {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Poppins', sans-serif;
         font-size: 14px;
         font-weight: 500;
         padding: 12px 24px;

@@ -64,6 +64,22 @@ class ShipmentsDataTable extends DataTable
                 return $model->payment_method_id ?? "";
             })
             ->editColumn('paid', function (Shipment $model) {
+                $receipt = $model->receipt;
+                if ($receipt) {
+                    if ($receipt->isRefundRequested()) {
+                        return 'Refund Requested';
+                    }
+                    if ($receipt->isPartiallyRefunded()) {
+                        return 'Partially Refunded';
+                    }
+                    if ($receipt->isRefunded()) {
+                        return 'Refunded';
+                    }
+                    if ($receipt->status === 'completed') {
+                        return __('cargo::view.paid');
+                    }
+                }
+
                 return $model->paid == 1 ? __('cargo::view.paid') : '-';
             })
             ->editColumn('shipping_date', function (Shipment $model) {
@@ -97,7 +113,7 @@ class ShipmentsDataTable extends DataTable
         // class filter for user only
         $shipment_filter = new ShipmentFilter($query, $request);
 
-        $query = $shipment_filter->filterBy($this->filters);
+        $query = $shipment_filter->filterBy($this->filters)->with('receipt');
 
         return $query;
     }

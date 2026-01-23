@@ -19,3 +19,5 @@ storage/framework/cache/data/
 /temp
 composer.lock
 package-lock.json
+index.php
+/public/index.php

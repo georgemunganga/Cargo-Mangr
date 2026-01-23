@@ -64,7 +64,7 @@
 <style>
 .main-sidebar {
     transition: all 0.3s ease;
-    font-family: 'Arial', sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
 /* Enhanced Glassmorphism */

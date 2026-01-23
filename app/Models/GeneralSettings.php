@@ -17,6 +17,8 @@ class GeneralSettings extends Settings
     public $login_page_logo;
     public $social_image;
     public $maintenance_mode;
+    public $enable_refund_payments;
+    public $allow_client_refunds;
     public $timezone;
     public $current_version;
     public $active_theme;
@@ -94,6 +96,20 @@ class GeneralSettings extends Settings
                 'label'         =>  'settings.maintenance_mode',
                 'translatable'  =>  false,
                 'value'         =>  $settings->maintenance_mode,
+                'type'          =>  'bool',
+                'required'      =>  false
+            ],
+            'enable_refund_payments' => [
+                'label'         =>  'settings.enable_refund_payments',
+                'translatable'  =>  false,
+                'value'         =>  $settings->enable_refund_payments,
+                'type'          =>  'bool',
+                'required'      =>  false
+            ],
+            'allow_client_refunds' => [
+                'label'         =>  'settings.allow_client_refunds',
+                'translatable'  =>  false,
+                'value'         =>  $settings->allow_client_refunds,
                 'type'          =>  'bool',
                 'required'      =>  false
             ],

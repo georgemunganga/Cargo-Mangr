@@ -34,16 +34,29 @@ class TransxnController extends Controller
             'this_month' => $sumCompletedBetween(Carbon::now()->startOfMonth(), Carbon::now()),
         ];
         
-        $refundedTransactions = $transactions->filter(function($transaction) {
-            return $transaction->isRefunded();
+        $refundedTransactions = $transactions->filter(function ($transaction) {
+            return $transaction->isRefunded() || $transaction->isPartiallyRefunded();
         });
-        
+
+        $resolveRefundAmount = function ($transaction) {
+            $amount = (float) ($transaction->refunded_amount ?? 0);
+            if ($transaction->isRefunded() && $amount <= 0) {
+                $amount = (float) $transaction->total;
+            }
+            return $amount;
+        };
+
+        $refundDateInRange = function ($transaction, Carbon $start, Carbon $end) {
+            $date = $transaction->refunded_at ?? $transaction->created_at;
+            return $date && $date->between($start, $end);
+        };
+
         $refundedTotals = [
-            'todate' => $refundedTransactions->sum('total'),
-            'today' => $refundedTransactions->whereBetween('created_at', [Carbon::today(), Carbon::now()])->sum('total'),
-            'yesterday' => $refundedTransactions->whereBetween('created_at', [Carbon::yesterday(), Carbon::today()])->sum('total'),
-            'this_week' => $refundedTransactions->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()])->sum('total'),
-            'this_month' => $refundedTransactions->whereBetween('created_at', [Carbon::now()->startOfMonth(), Carbon::now()])->sum('total'),
+            'todate' => $refundedTransactions->sum($resolveRefundAmount),
+            'today' => $refundedTransactions->filter(fn($txn) => $refundDateInRange($txn, Carbon::today(), Carbon::now()))->sum($resolveRefundAmount),
+            'yesterday' => $refundedTransactions->filter(fn($txn) => $refundDateInRange($txn, Carbon::yesterday(), Carbon::today()))->sum($resolveRefundAmount),
+            'this_week' => $refundedTransactions->filter(fn($txn) => $refundDateInRange($txn, Carbon::now()->startOfWeek(), Carbon::now()))->sum($resolveRefundAmount),
+            'this_month' => $refundedTransactions->filter(fn($txn) => $refundDateInRange($txn, Carbon::now()->startOfMonth(), Carbon::now()))->sum($resolveRefundAmount),
         ];
         
         $adminTheme = env('ADMIN_THEME', 'adminLte');

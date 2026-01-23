@@ -54,6 +54,8 @@ return [
             'returned-stock-shipments',
             'returned-deliverd-shipments',
             'print-barcodes',
+            'refund-shipment-payment',
+            'approve-refund-requests',
         ],
 
         'missions' => [ // this group is required if you want add any module setting, because the permissions are created under this group with the same name (setting)
