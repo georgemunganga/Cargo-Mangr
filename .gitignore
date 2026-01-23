@@ -15,7 +15,7 @@ yarn-error.log
 /.idea
 /.vscode
 storage/framework/cache/data/
-.env
+.env.example
 /temp
 composer.lock
 package-lock.json
