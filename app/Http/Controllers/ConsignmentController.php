@@ -31,7 +31,7 @@ class ConsignmentController extends Controller
         $consignments = Consignment::query()
             ->withCount('shipments')
             ->orderByDesc('created_at')
-            ->get();
+            ->paginate(200);
 
         $adminTheme = env('ADMIN_THEME', 'adminLte');
         return view('cargo::' . $adminTheme . '.pages.consignments.index', compact('consignments'));
