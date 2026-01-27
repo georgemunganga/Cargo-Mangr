@@ -28,9 +28,10 @@ class ConsignmentController extends Controller
      */
     public function index()
     {
-        $consignments = Consignment::with('shipments')
-        ->orderBy('created_at', 'desc')
-        ->get();
+        $consignments = Consignment::query()
+            ->withCount('shipments')
+            ->orderByDesc('created_at')
+            ->get();
 
         $adminTheme = env('ADMIN_THEME', 'adminLte');
         return view('cargo::' . $adminTheme . '.pages.consignments.index', compact('consignments'));

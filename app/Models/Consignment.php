@@ -77,6 +77,14 @@ class Consignment extends Model
 
     public function getShipmentCountAttribute()
     {
+        if (array_key_exists('shipments_count', $this->attributes)) {
+            return (int) $this->attributes['shipments_count'];
+        }
+
+        if ($this->relationLoaded('shipments')) {
+            return $this->shipments->count();
+        }
+
         return $this->shipments()->count();
     }
 
