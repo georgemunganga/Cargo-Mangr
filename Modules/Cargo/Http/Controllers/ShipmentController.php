@@ -426,7 +426,7 @@ class ShipmentController extends Controller
 
     public function show($id)
     {
-        $shipment = Shipment::with(['nwcReceipt.user', 'receipt'])->find($id);
+        $shipment = Shipment::with(['nwcReceipt.user', 'receipt', 'paymentReceipts.user'])->find($id);
         if (!$shipment) {
             abort(404, 'Shipment not found');
         }

@@ -42,6 +42,22 @@
         $paymentStatusLabel = $shipment->paid == 1 ? __('cargo::view.paid') : __('cargo::view.pending');
         $paymentStatusTone = $shipment->paid == 1 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700';
         $receipt = $shipment->receipt;
+        $nwcReceipt = $shipment->nwcReceipt;
+        $paymentReceipts = $shipment->paymentReceipts ?? collect();
+        $latestPaymentReceipt = $paymentReceipts->sortByDesc('created_at')->first();
+        $paidAt = $latestPaymentReceipt?->created_at ?? $nwcReceipt?->created_at ?? $receipt?->created_at;
+        $cashierName = $latestPaymentReceipt?->cashier_name
+            ?? $nwcReceipt?->cashier_name
+            ?? optional($latestPaymentReceipt?->user)->name
+            ?? optional($nwcReceipt?->user)->name
+            ?? null;
+        $paymentRows = $paymentReceipts->isNotEmpty()
+            ? $paymentReceipts
+            : collect($nwcReceipt ? [[
+                'method_of_payment' => $nwcReceipt->method_of_payment,
+                'amount' => $receipt?->total ?? $nwcReceipt->bill_kwacha,
+                'receipt_number' => $nwcReceipt->receipt_number,
+            ]] : []);
         if ($receipt) {
             if ($receipt->isRefundRequested()) {
                 $paymentStatusLabel = 'Refund Request Processing';
@@ -70,6 +86,43 @@
                     {{ $paymentStatusLabel }}
                 </span>
             </div>
+            @if ($shipment->paid)
+                <div class="mt-4 space-y-2 text-sm text-gray-700">
+                    <div class="flex justify-between gap-4">
+                        <span class="text-gray-500">Date Paid</span>
+                        <span class="font-semibold text-gray-900 text-right">
+                            {{ $paidAt ? $paidAt->format('Y-m-d H:i') : '-' }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <span class="text-gray-500">Cashier</span>
+                        <span class="font-semibold text-gray-900 text-right">{{ $cashierName ?: '-' }}</span>
+                    </div>
+                    @if ($paymentRows->isNotEmpty())
+                        <div class="pt-2 border-t border-gray-200">
+                            <div class="text-gray-500 mb-1">Payment Details</div>
+                            <div class="space-y-1">
+                                @foreach ($paymentRows as $paymentRow)
+                                    @php
+                                        $method = is_array($paymentRow) ? ($paymentRow['method_of_payment'] ?? null) : $paymentRow->method_of_payment;
+                                        $amount = is_array($paymentRow) ? ($paymentRow['amount'] ?? null) : $paymentRow->amount;
+                                        $receiptNumber = is_array($paymentRow) ? ($paymentRow['receipt_number'] ?? null) : $paymentRow->receipt_number;
+                                    @endphp
+                                    <div class="flex justify-between gap-4">
+                                        <span>{{ $method ? ucwords(str_replace('_', ' ', $method)) : 'Payment' }}</span>
+                                        <span class="font-semibold text-gray-900 text-right">
+                                            K{{ number_format((float) $amount, 2) }}
+                                        </span>
+                                    </div>
+                                    @if ($receiptNumber)
+                                        <div class="text-xs text-gray-500 text-right">{{ $receiptNumber }}</div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            @endif
         </div>
     </div>
 

@@ -5,7 +5,13 @@
 </button>
 @php
     $nwcReceipt = $shipment->nwcReceipt;
-    $receiptUser = optional($nwcReceipt?->user)->name ?? optional(auth()->user())->name ?? 'System';
+    $latestPaymentReceipt = ($shipment->paymentReceipts ?? collect())->sortByDesc('created_at')->first();
+    $receiptUser = $latestPaymentReceipt?->cashier_name
+        ?? $nwcReceipt?->cashier_name
+        ?? optional($latestPaymentReceipt?->user)->name
+        ?? optional($nwcReceipt?->user)->name
+        ?? optional(auth()->user())->name
+        ?? 'System';
 @endphp
 <div id="receiptContent" style="display:none;">
     <div style="font-family: 'Poppins', sans-serif; width: 58mm; padding: 10px;">
